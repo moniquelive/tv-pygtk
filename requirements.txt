@@ -1,2 +1,2 @@
 PyGObject
-requests
+redis

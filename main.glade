@@ -4,8 +4,9 @@
   <requires lib="gtk+" version="3.24"/>
   <template class="main_app_window" parent="GtkApplicationWindow">
     <property name="can-focus">False</property>
-    <property name="title" translatable="yes">Genderator</property>
+    <property name="title" translatable="yes">Moniquelive_bot Roster</property>
     <property name="show-menubar">False</property>
+    <signal name="window-state-event" handler="main_app_window_window_state_event_cb" swapped="no"/>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -17,10 +18,10 @@
         <property name="orientation">vertical</property>
         <property name="spacing">10</property>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="lblCount">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="label" translatable="yes">Digite seu nome:</property>
+            <property name="label" translatable="yes">...</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -29,54 +30,15 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <child>
-              <object class="GtkEntry" id="txtName">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="activates-default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="btnSearch">
-                <property name="label" translatable="yes">Buscar</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="can-default">True</property>
-                <property name="has-default">True</property>
-                <property name="receives-default">True</property>
-                <signal name="clicked" handler="btnSearch_clicked_cb" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
           <object class="GtkLabel" id="lblResult">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="label" translatable="yes">Aguarde...</property>
+            <property name="label" translatable="yes">...</property>
           </object>
           <packing>
             <property name="expand">True</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>

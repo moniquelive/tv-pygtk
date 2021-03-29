@@ -2,53 +2,49 @@ import sys
 import threading
 
 import gi
-import requests
+import redis
 
 gi.require_version("Gtk", "3.0")
-from gi.repository import GLib, Gio, Gtk
+gi.require_version("Gdk", "3.0")
+from gi.repository import GLib, Gdk, Gio, Gtk
+
+redisSetKey = "moniquelive_bot:roster"
+redisChannel = 'moniquelive_bot:notifications'
+
+red = redis.Redis(host='127.0.0.1')
+pubsub = redis.Redis(host='127.0.0.1').pubsub()
+pubsub.subscribe([redisChannel])
 
 
 @Gtk.Template.from_file("main.glade")
 class AppWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "main_app_window"
 
-    txtName: Gtk.Entry = Gtk.Template.Child()
-    btnSearch: Gtk.Button = Gtk.Template.Child()
+    lblCount: Gtk.Label = Gtk.Template.Child()
     lblResult: Gtk.Label = Gtk.Template.Child()
 
     @Gtk.Template.Callback()
-    def btnSearch_clicked_cb(self, widget, **_kwargs):
-        assert self.btnSearch == widget
-        self.txtName.set_sensitive(False)
-        self.btnSearch.set_sensitive(False)
+    def main_app_window_window_state_event_cb(self, _widget, state: Gdk.EventWindowState):
+        s: Gdk.WindowState = state.new_window_state
+        created = len(s.value_names) == 1 and s.value_names[0] == 'GDK_WINDOW_STATE_FOCUSED'
+        if created:
+            thread = threading.Thread(target=self.do_refresh)
+            thread.daemon = True
+            thread.start()
 
-        name = self.txtName.get_text()
-        thread = threading.Thread(target=self.do_request, args=(name,))
-        thread.daemon = True
-        thread.start()
-
-    def do_request(self, name):
-        url = 'https://api.genderize.io/?name=' + name
-
-        print(f"Buscando pelo nome {name}...")
-        response = requests.get(url).json()
-        GLib.idle_add(self.txtName.set_sensitive, True)
-        GLib.idle_add(self.btnSearch.set_sensitive, True)
-        if 'error' in response:
-            print("*** Error:", response['error'])
-            return
-        print(response)
-
-        gender = response['gender']
-        prob = response['probability']
-        GLib.idle_add(self.lblResult.set_text, f"{name} is {gender} ({int(100 * prob)}% sure)")
-        GLib.idle_add(self.txtName.set_text, "")
-        GLib.idle_add(self.txtName.grab_focus)
+    def do_refresh(self):
+        for _ in pubsub.listen():
+            GLib.idle_add(self.lblResult.set_text, '...')
+            GLib.idle_add(self.lblCount.set_text, '0 doidos')
+            roster = red.smembers(redisSetKey)
+            roster = sorted([x.decode('utf-8') for x in roster])
+            GLib.idle_add(self.lblResult.set_text, '\n'.join(roster))
+            GLib.idle_add(self.lblCount.set_text, f"{len(roster)} doidos")
 
 
 class Application(Gtk.Application):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, application_id="dev.monique.Gtk1",
+        super().__init__(*args, application_id="dev.monique.bot.Roster",
                          flags=Gio.ApplicationFlags.FLAGS_NONE, **kwargs)
         self.window = None
 
